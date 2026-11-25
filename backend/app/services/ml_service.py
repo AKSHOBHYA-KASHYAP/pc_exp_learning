@@ -14,6 +14,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import KFold, cross_val_score
 import datetime
+import warnings
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 MODEL_DIR = Path(__file__).resolve().parent.parent / "data"
 MODEL_PATH = MODEL_DIR / "parallelx_model.joblib"
@@ -40,7 +43,7 @@ class MLService:
         logical = psutil.cpu_count(logical=True) or 16
         return physical, logical
 
-    def _extract_feature_row(self, matrix_size: int, threads: int, scheduling: str, chunk_size: int, seq_time_ms: float) -> np.ndarray:
+    def _extract_feature_row(self, matrix_size: int, threads: int, scheduling: str, chunk_size: int, seq_time_ms: float) -> pd.DataFrame:
         """Constructs the standard feature vector for a single query."""
         physical_cpus, logical_cpus = self._get_hardware_info()
         total_elements = float(matrix_size ** 2)
@@ -51,21 +54,21 @@ class MLService:
         ideal_time_ms = float(seq_time_ms) / float(max(1, threads))
         flops_per_thread = flops / float(max(1, threads))
 
-        return np.array([
-            float(matrix_size),
-            total_elements,
-            flops,
-            float(threads),
-            float(chunk_size),
-            float(logical_cpus),
-            float(physical_cpus),
-            is_static,
-            is_dynamic,
-            is_guided,
-            float(seq_time_ms),
-            ideal_time_ms,
-            flops_per_thread
-        ], dtype=np.float64).reshape(1, -1)
+        return pd.DataFrame([{
+            'matrix_size': float(matrix_size),
+            'total_elements': total_elements,
+            'flops': flops,
+            'threads': float(threads),
+            'chunk_size': float(chunk_size),
+            'logical_cpus': float(logical_cpus),
+            'physical_cpus': float(physical_cpus),
+            'is_static': is_static,
+            'is_dynamic': is_dynamic,
+            'is_guided': is_guided,
+            'seq_time_ms': float(seq_time_ms),
+            'ideal_time_ms': ideal_time_ms,
+            'flops_per_thread': flops_per_thread
+        }])
 
     def _extract_dataset_features(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
         """Extracts tabular features from SQLite DataFrame."""
@@ -293,7 +296,7 @@ class MLService:
         pred_time_ms = max(0.05, pred_time_ms)
 
         # Ensemble Tree Predictions for Confidence Interval & Variance
-        tree_preds = [float(tree.predict(x_vec)[0]) for tree in rf_model.estimators_]
+        tree_preds = [float(tree.predict(x_vec.values)[0]) for tree in rf_model.estimators_]
         std_dev_trees = float(np.std(tree_preds))
         ci_lower = max(0.05, pred_time_ms - 1.96 * std_dev_trees)
         ci_upper = pred_time_ms + 1.96 * std_dev_trees

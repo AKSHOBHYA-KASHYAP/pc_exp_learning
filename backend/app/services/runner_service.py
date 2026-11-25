@@ -247,9 +247,11 @@ class RunnerService:
                 exp.completed_at = datetime.datetime.now().isoformat()
                 self._save_history()
 
+                summary_msg = f"Benchmark finished successfully. Speedup: {exp.speedup:.2f}x, Parallel Time: {exp.parallel_time_ms:.2f}ms, GFLOPS: {exp.gflops:.2f}"
                 await ws_manager.broadcast_to_experiment(experiment_id, {
                     "type": "completed",
                     "status": "completed",
+                    "message": summary_msg,
                     "data": exp.dict()
                 })
 

@@ -1,12 +1,14 @@
 import platform
 import subprocess
 from typing import Dict, Any
+from functools import lru_cache
 import psutil
 from ..config import IS_WINDOWS, WSL_AVAILABLE
 from ..models import CPUInfoModel, SystemInfoModel
 
+@lru_cache(maxsize=1)
 def get_cpu_model_name() -> str:
-    """Detects CPU brand name across Windows and Linux."""
+    """Detects CPU brand name across Windows and Linux (cached)."""
     try:
         if IS_WINDOWS and WSL_AVAILABLE:
             proc = subprocess.run(
@@ -24,8 +26,9 @@ def get_cpu_model_name() -> str:
         pass
     return platform.processor() or "Multi-Core x86_64 Processor"
 
+@lru_cache(maxsize=1)
 def get_gcc_version() -> str:
-    """Inspects installed GCC version."""
+    """Inspects installed GCC version (cached)."""
     try:
         cmd = ["wsl", "gcc", "--version"] if (IS_WINDOWS and WSL_AVAILABLE) else ["gcc", "--version"]
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=5)

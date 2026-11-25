@@ -2966,5 +2966,108 @@
     "is_valid": true,
     "error_message": null,
     "execution_environment": "Ubuntu WSL / Native GCC"
+  },
+  {
+    "id": "EXP-20261125103555-CE6884",
+    "status": "completed",
+    "created_at": "2026-11-25T10:35:55.089207",
+    "started_at": "2026-11-25T10:35:55.355143",
+    "completed_at": "2026-11-25T10:36:24.304141",
+    "config": {
+      "workload": "matrix_multiply",
+      "matrix_size": 1000,
+      "threads": 1,
+      "scheduling": "guided",
+      "chunk_size": 8,
+      "repetitions": 3,
+      "run_sequential": true
+    },
+    "results": [
+      {
+        "name": "Sequential Baseline",
+        "scheduling": "none",
+        "threads": 1,
+        "chunk_size": 8,
+        "time_ms": 1050.881,
+        "speedup": 1.0,
+        "efficiency": 100.0,
+        "gflops": 1.903,
+        "checksum": 64767999.9999,
+        "is_valid": true,
+        "max_diff": 0.0
+      },
+      {
+        "name": "OpenMP Static",
+        "scheduling": "static",
+        "threads": 1,
+        "chunk_size": 8,
+        "time_ms": 969.589,
+        "speedup": 1.08,
+        "efficiency": 108.38,
+        "gflops": 2.063,
+        "checksum": 64767999.9999,
+        "is_valid": true,
+        "max_diff": 0.0
+      },
+      {
+        "name": "OpenMP Dynamic",
+        "scheduling": "dynamic",
+        "threads": 1,
+        "chunk_size": 8,
+        "time_ms": 486.486,
+        "speedup": 2.16,
+        "efficiency": 216.01,
+        "gflops": 4.111,
+        "checksum": 64767999.9999,
+        "is_valid": true,
+        "max_diff": 0.0
+      },
+      {
+        "name": "OpenMP Guided",
+        "scheduling": "guided",
+        "threads": 1,
+        "chunk_size": 8,
+        "time_ms": 569.408,
+        "speedup": 1.85,
+        "efficiency": 184.56,
+        "gflops": 3.512,
+        "checksum": 64767999.9999,
+        "is_valid": true,
+        "max_diff": 0.0
+      }
+    ],
+    "sequential_time_ms": 1050.881,
+    "parallel_time_ms": 569.408,
+    "speedup": 1.85,
+    "efficiency": 184.56,
+    "gflops": 3.512,
+    "is_valid": true,
+    "error_message": null,
+    "execution_environment": "Ubuntu WSL / Native GCC"
+  },
+  {
+    "id": "EXP-20261125104159-10D0C2",
+    "status": "failed",
+    "created_at": "2026-11-25T10:41:59.310649",
+    "started_at": "2026-11-25T10:41:59.323421",
+    "completed_at": "2026-11-25T10:41:59.603056",
+    "config": {
+      "workload": "matrix_multiply",
+      "matrix_size": 500,
+      "threads": 8,
+      "scheduling": "static",
+      "chunk_size": 16,
+      "repetitions": 1,
+      "run_sequential": true
+    },
+    "results": [],
+    "sequential_time_ms": null,
+    "parallel_time_ms": null,
+    "speedup": null,
+    "efficiency": null,
+    "gflops": null,
+    "is_valid": true,
+    "error_message": "Process exited with code 4294967295: C\u0000a\u0000t\u0000a\u0000s\u0000t\u0000r\u0000o\u0000p\u0000h\u0000i\u0000c\u0000 \u0000f\u0000a\u0000i\u0000l\u0000u\u0000r\u0000e\u0000 \u0000\r\u0000\n\u0000E\u0000r\u0000r\u0000o\u0000r\u0000 \u0000c\u0000o\u0000d\u0000e\u0000:\u0000 \u0000W\u0000s\u0000l\u0000/\u0000S\u0000e\u0000r\u0000v\u0000i\u0000c\u0000e\u0000/\u0000E\u0000_\u0000U\u0000N\u0000E\u0000X\u0000P\u0000E\u0000C\u0000T\u0000E\u0000D\u0000\r\u0000\n\u0000",
+    "execution_environment": "Ubuntu WSL / Native GCC"
   }
 ]
