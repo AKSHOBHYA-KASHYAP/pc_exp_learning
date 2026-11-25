@@ -16,6 +16,20 @@ export const api = {
     return res.json();
   },
 
+  async getLiveMetrics(): Promise<{
+    total_cpu: number;
+    per_cpu: number[];
+    memory_percent: number;
+    memory_used_gb: number;
+    memory_total_gb: number;
+    frequency_mhz?: number;
+    core_count: number;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/api/system/metrics`);
+    if (!res.ok) throw new Error(`Failed to fetch live system metrics: ${res.statusText}`);
+    return res.json();
+  },
+
   async getEngineStatus(): Promise<{ engine_ready: boolean; compiler: string }> {
     const res = await fetch(`${API_BASE_URL}/api/engine/status`);
     if (!res.ok) throw new Error(`Failed to fetch engine status: ${res.statusText}`);

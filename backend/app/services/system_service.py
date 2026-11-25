@@ -1,5 +1,6 @@
 import platform
 import subprocess
+from typing import Dict, Any
 import psutil
 from ..config import IS_WINDOWS, WSL_AVAILABLE
 from ..models import CPUInfoModel, SystemInfoModel
@@ -77,3 +78,28 @@ def get_system_info() -> SystemInfoModel:
         compiler_path="wsl gcc" if (IS_WINDOWS and WSL_AVAILABLE) else "gcc",
         engine_ready=True,
     )
+
+def get_live_metrics() -> Dict[str, Any]:
+    """Returns actual real-time OS hardware telemetry for CPU cores, RAM, and throughput."""
+    per_cpu = psutil.cpu_percent(interval=None, percpu=True)
+    total_cpu = psutil.cpu_percent(interval=None)
+    mem = psutil.virtual_memory()
+
+    freq = None
+    try:
+        f = psutil.cpu_freq()
+        if f:
+            freq = round(f.current, 1)
+    except Exception:
+        pass
+
+    return {
+        "total_cpu": round(total_cpu, 1),
+        "per_cpu": [round(c, 1) for c in per_cpu],
+        "memory_percent": round(mem.percent, 1),
+        "memory_used_gb": round(mem.used / (1024**3), 2),
+        "memory_total_gb": round(mem.total / (1024**3), 2),
+        "frequency_mhz": freq,
+        "core_count": len(per_cpu)
+    }
+

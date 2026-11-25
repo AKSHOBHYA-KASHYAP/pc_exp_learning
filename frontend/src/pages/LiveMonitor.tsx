@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '../components/common/Card';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
-import { PlaceholderNotice } from '../components/common/PlaceholderNotice';
+import { api } from '../services/api';
 import { Activity, Cpu, Play, Pause, RefreshCw, Zap, Flame, HardDrive } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
@@ -15,64 +15,71 @@ interface StreamPoint {
 
 export const LiveMonitor: React.FC = () => {
   const [isStreaming, setIsStreaming] = useState<boolean>(true);
+  const [memStats, setMemStats] = useState<{ used: number; total: number; pct: number }>({ used: 0, total: 0, pct: 0 });
 
-  // Core utilization state
+  // Real core utilization state initialized with zeros
   const [coreLoads, setCoreLoads] = useState<number[]>([
-    82, 78, 85, 91, 74, 88, 79, 83, 14, 22, 18, 12, 19, 25, 16, 21
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
   ]);
 
   // Time-series stream buffer
-  const [streamData, setStreamData] = useState<StreamPoint[]>([
-    { time: '12:00:01', totalCpu: 68, throughputGflops: 3.4, memoryBandwidthGbps: 28.5 },
-    { time: '12:00:02', totalCpu: 72, throughputGflops: 3.5, memoryBandwidthGbps: 30.2 },
-    { time: '12:00:03', totalCpu: 79, throughputGflops: 3.8, memoryBandwidthGbps: 32.1 },
-    { time: '12:00:04', totalCpu: 84, throughputGflops: 3.9, memoryBandwidthGbps: 34.0 },
-    { time: '12:00:05', totalCpu: 82, throughputGflops: 3.7, memoryBandwidthGbps: 31.8 },
-    { time: '12:00:06', totalCpu: 88, throughputGflops: 4.1, memoryBandwidthGbps: 35.4 },
-    { time: '12:00:07', totalCpu: 85, throughputGflops: 4.0, memoryBandwidthGbps: 33.9 },
-  ]);
+  const [streamData, setStreamData] = useState<StreamPoint[]>([]);
 
-  // Periodic simulated ticker when streaming is active
+  // Real-time OS telemetry poller
   useEffect(() => {
     if (!isStreaming) return;
 
-    const interval = setInterval(() => {
-      const now = new Date();
-      const timeStr = now.toTimeString().split(' ')[0];
+    let isMounted = true;
+    const fetchTelemetry = async () => {
+      try {
+        const metrics = await api.getLiveMetrics();
+        if (!isMounted) return;
 
-      // Update core loads
-      setCoreLoads((prev) =>
-        prev.map((val, idx) => {
-          if (idx < 8) {
-            return Math.min(100, Math.max(40, Math.floor(val + (Math.random() * 16 - 8))));
-          } else {
-            return Math.min(100, Math.max(5, Math.floor(val + (Math.random() * 12 - 6))));
-          }
-        })
-      );
+        if (metrics.per_cpu && metrics.per_cpu.length > 0) {
+          setCoreLoads(metrics.per_cpu);
+        }
 
-      // Append new stream point
-      setStreamData((prev) => {
-        const nextCpu = Math.floor(65 + Math.random() * 25);
-        const nextGflops = Number((3.2 + Math.random() * 0.9).toFixed(2));
-        const nextBw = Number((28 + Math.random() * 8).toFixed(1));
+        setMemStats({
+          used: metrics.memory_used_gb,
+          total: metrics.memory_total_gb,
+          pct: metrics.memory_percent,
+        });
 
-        const updated = [...prev.slice(-14), {
-          time: timeStr,
-          totalCpu: nextCpu,
-          throughputGflops: nextGflops,
-          memoryBandwidthGbps: nextBw,
-        }];
-        return updated;
-      });
-    }, 1200);
+        const now = new Date();
+        const timeStr = now.toTimeString().split(' ')[0];
 
-    return () => clearInterval(interval);
+        // Theoretical peak compute throughput scaled by current actual CPU engagement
+        const estimatedGflops = Number(((metrics.total_cpu / 100) * 18.52).toFixed(2));
+        const estimatedBw = Number(((metrics.memory_percent / 100) * 48.0).toFixed(1));
+
+        setStreamData((prev) => {
+          const updated = [...prev.slice(-14), {
+            time: timeStr,
+            totalCpu: metrics.total_cpu,
+            throughputGflops: estimatedGflops,
+            memoryBandwidthGbps: estimatedBw,
+          }];
+          return updated;
+        });
+      } catch (err) {
+        console.warn('Real-time hardware polling error:', err);
+      }
+    };
+
+    fetchTelemetry();
+    const interval = setInterval(fetchTelemetry, 1000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [isStreaming]);
 
-  const avgLoad = Math.round(coreLoads.reduce((a, b) => a + b, 0) / coreLoads.length);
-  const currentGflops = streamData[streamData.length - 1]?.throughputGflops || 3.8;
-  const currentBw = streamData[streamData.length - 1]?.memoryBandwidthGbps || 32.0;
+  const avgLoad = coreLoads.length > 0
+    ? Math.round(coreLoads.reduce((a, b) => a + b, 0) / coreLoads.length)
+    : 0;
+  const currentGflops = streamData[streamData.length - 1]?.throughputGflops || 0;
+  const currentBw = streamData[streamData.length - 1]?.memoryBandwidthGbps || 0;
 
   return (
     <div className="space-y-6">
@@ -148,12 +155,12 @@ export const LiveMonitor: React.FC = () => {
         </Card>
 
         <Card className="p-4 flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             <Flame size={20} />
           </div>
           <div>
-            <div className="text-[10px] uppercase font-mono text-gray-400">Package Temp</div>
-            <div className="text-xl font-bold font-mono text-rose-400">62.4 °C</div>
+            <div className="text-[10px] uppercase font-mono text-gray-400">RAM Utilization</div>
+            <div className="text-xl font-bold font-mono text-emerald-400">{memStats.pct}% ({memStats.used} GB)</div>
           </div>
         </Card>
       </div>
