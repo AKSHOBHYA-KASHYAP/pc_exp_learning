@@ -133,3 +133,63 @@
   border-color: #2997FF;
   box-shadow: 0 0 0 3px rgba(41, 151, 255, 0.25);
 }
+
+/* Apple Proportional Precision Range Slider */
+.apple-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  outline: none;
+  transition: all 0.15s ease-in-out;
+}
+
+.apple-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 2.5px solid #0071E3;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
+}
+
+.dark .apple-range-slider::-webkit-slider-thumb {
+  background: #FFFFFF;
+  border: 2.5px solid #2997FF;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.apple-range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.18);
+  box-shadow: 0 3px 10px rgba(0, 113, 227, 0.45);
+}
+
+.apple-range-slider::-webkit-slider-thumb:active {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.3);
+}
+
+.apple-range-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 2.5px solid #0071E3;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dark .apple-range-slider::-moz-range-thumb {
+  border: 2.5px solid #2997FF;
+}
+
+.apple-range-slider::-moz-range-thumb:hover {
+  transform: scale(1.18);
+}
+
